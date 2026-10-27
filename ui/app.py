@@ -1,11 +1,45 @@
 import sys
 import threading
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QTextEdit, QLineEdit, QPushButton, QLabel, QFrame
-)
-from PyQt6.QtCore import Qt, pyqtSignal, QObject
-from PyQt6.QtGui import QTextCursor
+
+try:
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+        QTextEdit, QLineEdit, QPushButton, QLabel, QFrame
+    )
+    from PyQt6.QtCore import Qt, pyqtSignal, QObject
+    from PyQt6.QtGui import QTextCursor
+
+    HAS_PYQT = True
+
+    class UIBridge(QObject):
+        """Bridge to pass messages from background agent threads to the Qt GUI thread."""
+        mentor_message_received = pyqtSignal(str, int)
+        user_input_requested = pyqtSignal()
+        solution_received = pyqtSignal(str)
+        evaluator_verdict_received = pyqtSignal(str)
+
+    bridge = UIBridge()
+
+except (ImportError, OSError):
+    HAS_PYQT = False
+    QMainWindow = object
+    QApplication = None
+    Qt = None
+
+    class MockSignal:
+        def emit(self, *args, **kwargs):
+            pass
+
+        def connect(self, *args, **kwargs):
+            pass
+
+    class DummyBridge:
+        mentor_message_received = MockSignal()
+        user_input_requested = MockSignal()
+        solution_received = MockSignal()
+        evaluator_verdict_received = MockSignal()
+
+    bridge = DummyBridge()
 
 from src.utils.read_yaml import ReadYaml
 from ui.translations import TRANSLATIONS
@@ -13,15 +47,6 @@ from ui.styles import SOCRATIC_DARK_THEME
 from ui.templates import ChatTemplates
 
 
-class UIBridge(QObject):
-    """Bridge to pass messages from background agent threads to the Qt GUI thread."""
-    mentor_message_received = pyqtSignal(str, int)
-    user_input_requested = pyqtSignal()
-    solution_received = pyqtSignal(str)
-    evaluator_verdict_received = pyqtSignal(str)
-
-
-bridge = UIBridge()
 _user_reply_event = threading.Event()
 _user_reply_text = ""
 
