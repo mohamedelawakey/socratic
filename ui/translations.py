@@ -1,0 +1,31 @@
+# Multilingual Dictionary for Socratic UI
+TRANSLATIONS = {
+    "arabic": {
+        "app_title": "🧠 سُقراط ديبَج — المُرشد البرمجي التفاعلي",
+        "header_title": "🧠 المُرشد السقراطي للبرمجة",
+        "status_active": "● الجلسة نشطة",
+        "status_solved": "✔ تم الحل بنجاح",
+        "crash_location": "الموقع",
+        "crashing_line": "السطر المسبب للخطأ",
+        "placeholder": "اكتب إجابتك هنا، أو اكتب 'خروج' للإنهاء...",
+        "send_btn": "إرسال",
+        "mentor_tag": "المُرشد السقراطي",
+        "hint_level": "مستوى التلميح",
+        "user_tag": "إجابتك",
+        "wrapup_title": "🏆 الحل النهائي وأفضل الممارسات البرمجية",
+    },
+    "english": {
+        "app_title": "🧠 Socratic Debug — Autonomous Mentor",
+        "header_title": "🧠 SOCRATIC DEBUG MENTOR",
+        "status_active": "● ACTIVE SESSION",
+        "status_solved": "✔ SOLVED & CONCLUDED",
+        "crash_location": "Location",
+        "crashing_line": "Crashing Line",
+        "placeholder": "Type your answer here, or type 'exit' / 'q' to quit...",
+        "send_btn": "Send",
+        "mentor_tag": "Socratic Mentor",
+        "hint_level": "Hint Level",
+        "user_tag": "Your Response",
+        "wrapup_title": "🏆 Socratic Wrap-Up & Defensive Best Practice",
+    }
+}
