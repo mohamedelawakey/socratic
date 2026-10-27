@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "socratic-debug"
+version = "0.1.0"
+description = "Autonomous pedagogical debugging mentor powered by LangGraph, Rich, and LangSmith"
+authors = [{ name = "Mohamed Elawakey" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "rich>=13.7.0",
+    "PyQt6>=6.6.0",
+    "langgraph>=1.2.0",
+    "langchain>=1.4.0",
+    "langchain-ollama>=1.1.0",
+    "langchain-openrouter>=0.2.0",
+]
+
+[project.scripts]
+socratic = "src.cli:main"
+
+[tool.setuptools]
+py-modules = ["socratic"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "ui*"]

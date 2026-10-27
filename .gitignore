@@ -1,0 +1,13 @@
+__pycache__/
+
+# md files
+full_plan.md
+
+# images
+socratic_agent_architecture_1792929194975.jpg
+
+# virtual environments
+.socratic.yaml
+venv/
+.venv/
+.env
