@@ -17,6 +17,8 @@ try:
         user_input_requested = pyqtSignal()
         solution_received = pyqtSignal(str)
         evaluator_verdict_received = pyqtSignal(str)
+        live_solution_detected = pyqtSignal()
+        live_error_detected = pyqtSignal(str)
 
     bridge = UIBridge()
 
@@ -38,6 +40,8 @@ except (ImportError, OSError):
         user_input_requested = MockSignal()
         solution_received = MockSignal()
         evaluator_verdict_received = MockSignal()
+        live_solution_detected = MockSignal()
+        live_error_detected = MockSignal()
 
     bridge = DummyBridge()
 
@@ -158,6 +162,8 @@ class SocraticWindow(QMainWindow):
 
         self.send_button = QPushButton(self.translations["send_btn"], self)
         self.send_button.setObjectName("sendButton")
+        if Qt is not None:
+            self.send_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.send_button.clicked.connect(self._on_send_clicked)
         self.send_button.setEnabled(False)
 
@@ -170,6 +176,43 @@ class SocraticWindow(QMainWindow):
         bridge.user_input_requested.connect(self._enable_user_input)
         bridge.solution_received.connect(self._append_solution)
         bridge.evaluator_verdict_received.connect(self._append_verdict)
+        bridge.live_solution_detected.connect(self._on_live_solution_detected)
+        bridge.live_error_detected.connect(self._on_live_error_detected)
+
+    def _on_live_solution_detected(self):
+        self.status_badge.setText(self.translations["status_solved"])
+        self.status_badge.setStyleSheet("color: #ffffff; background-color: #238636;")
+
+        celebration_html = (
+            f"<div style='background-color: #162a1c; border: 1px solid #238636; "
+            f"border-radius: 8px; padding: 12px; margin: 8px 0; color: #3fb950; font-size: 14px;'>"
+            f"<b>{self.translations['live_solved_msg']}</b></div>"
+        )
+        self.chat_area.append(celebration_html)
+        self._scroll_to_bottom()
+
+        # Switch send button to Close button
+        self.input_field.setEnabled(False)
+        self.send_button.setEnabled(True)
+        self.send_button.setText(self.translations["close_btn"])
+        self.send_button.setStyleSheet("background-color: #238636; color: #ffffff;")
+        try:
+            self.send_button.clicked.disconnect()
+        except TypeError:
+            pass
+        self.send_button.clicked.connect(self.close)
+
+        # Release background worker thread if waiting for user input
+        submit_gui_user_input("q")
+
+    def _on_live_error_detected(self, error_trace: str):
+        retry_html = (
+            f"<div style='background-color: #2b1d20; border: 1px solid #da3633; "
+            f"border-radius: 8px; padding: 10px; margin: 8px 0; color: #ff7b72; font-size: 13px;'>"
+            f"<b>{self.translations['live_retry_msg']}</b></div>"
+        )
+        self.chat_area.append(retry_html)
+        self._scroll_to_bottom()
 
     def _append_mentor_message(self, content: str, hint_level: int):
         html_msg = ChatTemplates.mentor_bubble(
@@ -221,6 +264,17 @@ class SocraticWindow(QMainWindow):
         )
         self.chat_area.append(sol_html)
         self._scroll_to_bottom()
+
+        # Switch send button to Close Session button
+        self.input_field.setEnabled(False)
+        self.send_button.setEnabled(True)
+        self.send_button.setText(self.translations["close_btn"])
+        self.send_button.setStyleSheet("background-color: #238636; color: #ffffff;")
+        try:
+            self.send_button.clicked.disconnect()
+        except TypeError:
+            pass
+        self.send_button.clicked.connect(self.close)
 
     def _scroll_to_bottom(self):
         cursor = self.chat_area.textCursor()
