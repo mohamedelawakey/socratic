@@ -1,7 +1,9 @@
+# python cache
 __pycache__/
 
 # md files
 full_plan.md
+plan.md
 
 # images
 socratic_agent_architecture_1792929194975.jpg
@@ -11,3 +13,8 @@ socratic_agent_architecture_1792929194975.jpg
 venv/
 .venv/
 .env
+
+# build artifacts
+*.egg-info/
+dist/
+build/

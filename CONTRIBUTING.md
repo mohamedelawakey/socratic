@@ -56,7 +56,7 @@ Before writing code or opening a Pull Request, please follow these guidelines ba
    ```bash
    python3 -m unittest discover tests/
    # Or run target test scripts
-   socratic run test/test_hock.py
+   socratic run test/test_hook.py
    ```
 
 6. **Commit & Push**
