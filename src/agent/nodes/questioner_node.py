@@ -3,7 +3,7 @@ from src.agent.state.state import SocraticAgentState
 from src.agent.llm.factory import LLMFactory
 from src.utils.read_yaml import ReadYaml
 
-from ui.views import SocraticUI
+from src.events import EventBus
 
 config = ReadYaml.read_yaml()
 
@@ -33,7 +33,7 @@ class QuestionerNode:
 
         response = LLMFactory.get_llm().invoke(prompt)
 
-        SocraticUI.display_mentor_message(
+        EventBus.emit_mentor_message(
             content=response.content,
             hint_level=current_hint,
         )
