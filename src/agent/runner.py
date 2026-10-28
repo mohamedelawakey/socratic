@@ -2,7 +2,7 @@ from src.extractor import extract_crash_context
 from src.agent.graph.graph import SocraticGraph
 
 def run_socratic_agent(exception_type, exception_value, exception_traceback):
-    context = extract_crash_context(exception_traceback)
+    context = extract_crash_context(exception_traceback, exception_value)
 
     initial_state = {
         "file_path": context["file_path"],

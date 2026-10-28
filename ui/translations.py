@@ -13,6 +13,9 @@ TRANSLATIONS = {
         "hint_level": "مستوى التلميح",
         "user_tag": "إجابتك",
         "wrapup_title": "🏆 الحل النهائي وأفضل الممارسات البرمجية",
+        "live_solved_msg": "🎉 عاش يا بطل! لقطت إنك عدلت الكود واشتغل بنجاح والمشكلة اتحلت خلاص!",
+        "live_retry_msg": "👀 لقطت تعديلك على الكود، بس لسه فيه خطأ بيظهر. راجع التعديل وفكر في النقطة اللي اتكلمنا فيها!",
+        "close_btn": "إنهاء الجلسة",
     },
     "english": {
         "app_title": "🧠 Socratic Debug — Autonomous Mentor",
@@ -27,5 +30,8 @@ TRANSLATIONS = {
         "hint_level": "Hint Level",
         "user_tag": "Your Response",
         "wrapup_title": "🏆 Socratic Wrap-Up & Defensive Best Practice",
+        "live_solved_msg": "🎉 Awesome! Detected your code change and the script executed successfully with no errors!",
+        "live_retry_msg": "👀 Detected your code change, but an error is still occurring. Review the change and keep thinking!",
+        "close_btn": "Close Session",
     }
 }

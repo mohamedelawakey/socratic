@@ -17,7 +17,10 @@ print("*" * 20)
 number_1 = 10
 number_2 = 0
 
-print(number_1 / number_2)
+if number_2 == 0:
+    print("sorry we can't do it")
+else:
+    print(number_1 / number_2)
 
 # test a logic error
 print("make a logic error in the average function")

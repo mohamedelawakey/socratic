@@ -1,31 +1,29 @@
 import sys
-import os
 from pathlib import Path
 
-# Add project root to sys.path so modules and UI resolve everywhere
+# Add project root to sys.path so modules resolve everywhere
 project_root = str(Path(__file__).resolve().parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from src.hook import install
-from ui.console import console
 
 
 def print_usage():
-    console.print("""
-[bold cyan]🧠 Socratic Debug — Autonomous Pedagogical Debugger[/bold cyan]
+    print("""
+🧠 Socratic Debug — Autonomous Pedagogical Debugger
 
-[bold yellow]Usage:[/bold yellow]
-  [green]socratic run <script.py>[/green]   Run a Python file under Socratic supervision
-  [green]socratic init[/green]              Create a default .socratic.yaml config file
-  [green]socratic --help[/green]            Show this help message
+Usage:
+  socratic run <script.py>   Run a Python file under Socratic supervision
+  socratic init              Create a default .socratic.yaml config file
+  socratic --help            Show this help message
 """)
 
 
 def run_target_script(script_path: str, script_args: list):
     resolved_path = Path(script_path).resolve()
     if not resolved_path.exists():
-        console.print(f"[bold red]Error:[/bold red] File not found: [yellow]{resolved_path}[/yellow]")
+        print(f"Error: File not found: {resolved_path}")
         sys.exit(1)
 
     # Automatically install Socratic hook before user code executes
@@ -50,7 +48,7 @@ def run_target_script(script_path: str, script_args: list):
     except SystemExit:
         raise
     except Exception:
-        # sys.excepthook will catch this cleanly and launch Socratic GUI!
+        # sys.excepthook will catch this cleanly and launch Socratic!
         sys.excepthook(*sys.exc_info())
 
 
@@ -68,19 +66,13 @@ def main():
     elif command == "init":
         from src.config_creator import create_config
         create_config()
-        console.print("[bold green]✔[/bold green] Created [cyan].socratic.yaml[/cyan] with default settings.")
+        print("✔ Created .socratic.yaml with default settings.")
         sys.exit(0)
-
-    elif command == "session":
-        # Internal command executed inside the dedicated popup window
-        target_file = sys.argv[2]
-        extra_args = sys.argv[3:]
-        run_target_script(target_file, extra_args, force_in_process=True)
 
     elif command == "run":
         if len(sys.argv) < 3:
-            console.print("[bold red]Error:[/bold red] Missing script file to run.")
-            console.print("Example: [green]socratic run app.py[/green]")
+            print("Error: Missing script file to run.")
+            print("Example: socratic run app.py")
             sys.exit(1)
 
         target_file = sys.argv[2]

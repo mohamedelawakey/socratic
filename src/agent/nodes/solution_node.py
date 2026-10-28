@@ -2,8 +2,7 @@ from src.agent.prompts.solution_prompt import SolutionPrompt
 from src.agent.state.state import SocraticAgentState
 from src.agent.llm.factory import LLMFactory
 from src.utils.read_yaml import ReadYaml
-
-from ui.views import SocraticUI
+from src.events import EventBus
 
 config = ReadYaml.read_yaml()
 
@@ -25,7 +24,7 @@ class SolutionNode:
 
         response = LLMFactory.get_llm().invoke(prompt)
 
-        SocraticUI.display_solution(response.content)
+        EventBus.emit_solution(response.content)
 
         history = list(state.get("dialogue_history", []))
         history.append({"role": "mentor", "content": response.content})

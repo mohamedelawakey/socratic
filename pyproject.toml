@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-socratic = "src.cli:main"
+socratic = "socratic:main"
 
 [tool.setuptools]
 py-modules = ["socratic"]

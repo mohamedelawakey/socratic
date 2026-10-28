@@ -1,19 +1,31 @@
 from src.agent.prompts.evaluation_prompt import EvaluationPrompt
 from src.agent.state.state import SocraticAgentState
 from src.agent.llm.factory import LLMFactory
+from src.events import EventBus
 
-from ui.views import SocraticUI
 
 class EvaluationNode:
     @staticmethod
     def evaluation_node(state: SocraticAgentState):
-        prompt = EvaluationPrompt.evaluation_prompt(
-                error_type=state["error_type"],
-                code_snippet=state["code_snippet"],
-                root_cause=state["root_cause"],
-                user_input=state.get("user_input") or state["dialogue_history"][-1]["content"]
+        user_input = state.get("user_input") or (
+            state["dialogue_history"][-1]["content"] if state.get("dialogue_history") else ""
         )
-        
+
+        # Immediate exit bypass: if user typed exit / quit / q
+        if state.get("is_solved") or user_input.lower().strip() in ["exit", "quit", "q"]:
+            EventBus.emit_evaluator_verdict("SOLVED")
+            return {
+                "eval_status": "surrendered",
+                "is_solved": True,
+            }
+
+        prompt = EvaluationPrompt.evaluation_prompt(
+            error_type=state["error_type"],
+            code_snippet=state["code_snippet"],
+            root_cause=state["root_cause"],
+            user_input=user_input,
+        )
+
         response = LLMFactory.get_llm().invoke(prompt)
         verdict = response.content.strip().upper()
 
@@ -30,7 +42,7 @@ class EvaluationNode:
             status = "struggling"
             is_solved = False
 
-        SocraticUI.display_evaluator_verdict(verdict_key)
+        EventBus.emit_evaluator_verdict(verdict_key)
 
         return {
             "eval_status": status,
