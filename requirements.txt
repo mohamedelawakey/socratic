@@ -13,3 +13,6 @@ langgraph==1.2.17
 # Terminal & GUI Window
 rich>=13.7.0
 PyQt6>=6.6.0
+
+# DB
+SQLAlchemy==2.1.8
