@@ -8,6 +8,16 @@ class EventBus:
     _on_evaluator_verdict: Optional[Callable[[str], None]] = None
     _on_solution: Optional[Callable[[str], None]] = None
     _on_crash: Optional[Callable[[Dict[str, Any], Any, Any, Any], None]] = None
+    _on_llm_error: Optional[Callable[[str], None]] = None
+    _is_session_cancelled: bool = False
+
+    @classmethod
+    def emit_session_cancelled(cls):
+        cls._is_session_cancelled = True
+
+    @classmethod
+    def is_session_cancelled(cls) -> bool:
+        return cls._is_session_cancelled
 
     @classmethod
     def register_handlers(
@@ -17,6 +27,7 @@ class EventBus:
         on_evaluator_verdict: Optional[Callable[[str], None]] = None,
         on_solution: Optional[Callable[[str], None]] = None,
         on_crash: Optional[Callable[[Dict[str, Any], Any, Any, Any], None]] = None,
+        on_llm_error: Optional[Callable[[str], None]] = None,
     ):
         """Registers presentation callbacks into the Core event bus."""
         if on_mentor_message:
@@ -29,6 +40,8 @@ class EventBus:
             cls._on_solution = on_solution
         if on_crash:
             cls._on_crash = on_crash
+        if on_llm_error:
+            cls._on_llm_error = on_llm_error
 
     @classmethod
     def emit_mentor_message(cls, content: str, hint_level: int = 1):
@@ -65,3 +78,10 @@ class EventBus:
         else:
             print(f"\n💥 {exc_type.__name__}: {exc_val}")
             print(f"📍 {context.get('file_path')}:{context.get('line_number')}\n")
+
+    @classmethod
+    def emit_llm_error(cls, err_msg: str):
+        if cls._on_llm_error:
+            cls._on_llm_error(err_msg)
+        else:
+            print(f"⚠️ [LLM Error]: {err_msg}")
