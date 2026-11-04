@@ -170,6 +170,26 @@ class SettingsDrawer(QFrame):
         form_layout.addWidget(self.style_combo)
 
         # Separator line
+        sep0 = QFrame()
+        sep0.setFrameShape(QFrame.Shape.HLine)
+        sep0.setStyleSheet("color: #30363d; margin: 8px 0;")
+        form_layout.addWidget(sep0)
+
+        # Database Engine Selection
+        form_layout.addWidget(self._make_label(self.translations.get("database_type_label", "Database Engine:")))
+        self.database_type_combo = QComboBox(form_widget)
+        self.database_type_combo.setProperty("class", "settingsCombo")
+        self.database_type_combo.addItems(["sqlite", "postgresql", "mysql", "mariadb", "mssql", "oracle", "duckdb", "cockroachdb"])
+        form_layout.addWidget(self.database_type_combo)
+
+        # Database Custom URL
+        form_layout.addWidget(self._make_label(self.translations.get("database_url_label", "Database URL (Optional):")))
+        self.database_url_edit = QLineEdit(form_widget)
+        self.database_url_edit.setProperty("class", "settingsInput")
+        self.database_url_edit.setPlaceholderText("sqlite:///$HOME/.socratic/socratic.db")
+        form_layout.addWidget(self.database_url_edit)
+
+        # Separator line
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
         sep.setStyleSheet("color: #30363d; margin: 8px 0;")
@@ -244,6 +264,13 @@ class SettingsDrawer(QFrame):
         if idx >= 0:
             self.style_combo.setCurrentIndex(idx)
 
+        # Database Engine & URL
+        db_type = str(cfg.get("database_type", "sqlite")).lower()
+        idx = self.database_type_combo.findText(db_type, Qt.MatchFlag.MatchFixedString)
+        if idx >= 0:
+            self.database_type_combo.setCurrentIndex(idx)
+        self.database_url_edit.setText(str(cfg.get("database_url", "")))
+
         tracing = str(cfg.get("LANGSMITH_TRACING", "true")).lower()
         idx = self.tracing_combo.findText(tracing, Qt.MatchFlag.MatchFixedString)
         if idx >= 0:
@@ -260,6 +287,8 @@ class SettingsDrawer(QFrame):
             "api_key": self.api_key_field.get_value(),
             "socratic_language": self.language_combo.currentText().strip(),
             "socratic_style": self.style_combo.currentText().strip(),
+            "database_type": self.database_type_combo.currentText().strip(),
+            "database_url": self.database_url_edit.text().strip(),
             "LANGSMITH_TRACING": self.tracing_combo.currentText().strip(),
             "LANGSMITH_API_KEY": self.langsmith_key_field.get_value(),
             "LANGSMITH_PROJECT": self.langsmith_project_edit.text().strip(),
