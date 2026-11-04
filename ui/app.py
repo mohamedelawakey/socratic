@@ -19,6 +19,7 @@ try:
         evaluator_verdict_received = pyqtSignal(str)
         live_solution_detected = pyqtSignal()
         live_error_detected = pyqtSignal(str)
+        llm_error_occurred = pyqtSignal(str)
 
     bridge = UIBridge()
 
@@ -42,6 +43,7 @@ except (ImportError, OSError):
         evaluator_verdict_received = MockSignal()
         live_solution_detected = MockSignal()
         live_error_detected = MockSignal()
+        llm_error_occurred = MockSignal()
 
     bridge = DummyBridge()
 
@@ -49,6 +51,7 @@ from src.utils.read_yaml import ReadYaml
 from ui.translations import TRANSLATIONS
 from ui.styles import SOCRATIC_DARK_THEME
 from ui.templates import ChatTemplates
+from ui.settings_drawer import SettingsDrawer
 
 
 _user_reply_event = threading.Event()
@@ -102,7 +105,15 @@ class SocraticWindow(QMainWindow):
     def _build_ui(self, error_type: str, error_message: str, file_path: str, line_number: int, line_content: str):
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
+
+        # Root layout holding Left (Chat & Main) and Right (Settings Drawer)
+        root_h_layout = QHBoxLayout(central_widget)
+        root_h_layout.setContentsMargins(0, 0, 0, 0)
+        root_h_layout.setSpacing(0)
+
+        # Left / Main Container
+        left_container = QWidget(central_widget)
+        main_layout = QVBoxLayout(left_container)
         main_layout.setContentsMargins(18, 16, 18, 16)
         main_layout.setSpacing(12)
 
@@ -111,12 +122,19 @@ class SocraticWindow(QMainWindow):
         header_label = QLabel(self.translations["header_title"], self)
         header_label.setObjectName("headerTitle")
         
+        self.settings_btn = QPushButton(self.translations.get("settings_btn", "⚙️ Settings"), self)
+        self.settings_btn.setObjectName("settingsButton")
+        if Qt is not None:
+            self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.settings_btn.clicked.connect(self._toggle_settings_drawer)
+
         self.status_badge = QLabel(self.translations["status_active"], self)
         self.status_badge.setObjectName("statusBadge")
         self.status_badge.setStyleSheet("color: #3fb950; background-color: #162a1c;")
         
         top_bar.addWidget(header_label)
         top_bar.addStretch()
+        top_bar.addWidget(self.settings_btn)
         top_bar.addWidget(self.status_badge)
         main_layout.addLayout(top_bar)
 
@@ -171,6 +189,41 @@ class SocraticWindow(QMainWindow):
         input_layout.addWidget(self.send_button)
         main_layout.addLayout(input_layout)
 
+        root_h_layout.addWidget(left_container, stretch=1)
+
+        # Settings Drawer Panel (320px width, hidden initially)
+        self.settings_drawer = SettingsDrawer(self.translations, self)
+        self.settings_drawer.setFixedWidth(320)
+        self.settings_drawer.hide()
+        self.settings_drawer.drawer_closed.connect(self._close_settings_drawer)
+        self.settings_drawer.settings_saved.connect(self._on_settings_saved)
+        root_h_layout.addWidget(self.settings_drawer)
+
+    def _toggle_settings_drawer(self):
+        if self.settings_drawer.isVisible():
+            self._close_settings_drawer()
+        else:
+            self._open_settings_drawer()
+
+    def _open_settings_drawer(self):
+        self.settings_drawer.load_settings()
+        self.settings_drawer.show()
+        # Expand window slightly if needed to make space for drawer
+        self.resize(self.width() + 40 if self.width() < 950 else self.width(), self.height())
+
+    def _close_settings_drawer(self):
+        self.settings_drawer.hide()
+
+    def _on_settings_saved(self):
+        self._llm_warned = False
+        resume_html = (
+            f"<div style='background-color: #162a1c; border: 1px solid #238636; "
+            f"border-radius: 8px; padding: 10px; margin: 8px 0; color: #3fb950; font-size: 13px;'>"
+            f"<b>{self.translations['llm_retry_success']}</b></div>"
+        )
+        self.chat_area.append(resume_html)
+        self._scroll_to_bottom()
+
     def _connect_signals(self):
         bridge.mentor_message_received.connect(self._append_mentor_message)
         bridge.user_input_requested.connect(self._enable_user_input)
@@ -178,6 +231,26 @@ class SocraticWindow(QMainWindow):
         bridge.evaluator_verdict_received.connect(self._append_verdict)
         bridge.live_solution_detected.connect(self._on_live_solution_detected)
         bridge.live_error_detected.connect(self._on_live_error_detected)
+        bridge.llm_error_occurred.connect(self._on_llm_error_occurred)
+
+    def _on_llm_error_occurred(self, err_msg: str):
+        if hasattr(self, "_llm_warned") and self._llm_warned:
+            return
+        self._llm_warned = True
+
+        warn_html = (
+            f"<div style='background-color: #272115; border: 1px solid #d29922; "
+            f"border-radius: 8px; padding: 12px; margin: 8px 0; color: #e3b341; font-size: 13px;'>"
+            f"<b>{self.translations['llm_config_needed']}</b><br/>"
+            f"<span style='color: #8b949e; font-size: 11px;'>Details: {err_msg[:120]}...</span>"
+            f"</div>"
+        )
+        self.chat_area.append(warn_html)
+        self._scroll_to_bottom()
+
+        # Automatically pop open the settings drawer for the user!
+        if not self.settings_drawer.isVisible():
+            self._open_settings_drawer()
 
     def _on_live_solution_detected(self):
         self.status_badge.setText(self.translations["status_solved"])
