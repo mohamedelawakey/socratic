@@ -7,7 +7,7 @@ try:
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
         QTextEdit, QLineEdit, QPushButton, QLabel, QFrame
     )
-    from PyQt6.QtCore import Qt, pyqtSignal, QObject
+    from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QPropertyAnimation, QPoint
     from PyQt6.QtGui import QTextCursor
 
     HAS_PYQT = True
@@ -123,6 +123,12 @@ class SocraticWindow(QMainWindow):
         header_label = QLabel(self.translations["header_title"], self)
         header_label.setObjectName("headerTitle")
         
+        self.dashboard_btn = QPushButton(self.translations.get("dashboard_btn", "📊 Dashboard"), self)
+        self.dashboard_btn.setObjectName("dashboardButton")
+        if Qt is not None:
+            self.dashboard_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.dashboard_btn.clicked.connect(self._on_dashboard_clicked)
+
         self.settings_btn = QPushButton(self.translations.get("settings_btn", "⚙️ Settings"), self)
         self.settings_btn.setObjectName("settingsButton")
         if Qt is not None:
@@ -135,6 +141,7 @@ class SocraticWindow(QMainWindow):
         
         top_bar.addWidget(header_label)
         top_bar.addStretch()
+        top_bar.addWidget(self.dashboard_btn)
         top_bar.addWidget(self.settings_btn)
         top_bar.addWidget(self.status_badge)
         main_layout.addLayout(top_bar)
@@ -205,6 +212,63 @@ class SocraticWindow(QMainWindow):
             self._close_settings_drawer()
         else:
             self._open_settings_drawer()
+
+    def _on_dashboard_clicked(self):
+        # Toast Notification popup in the corner that automatically fades out
+        self._show_toast(self.translations.get("dashboard_coming_soon", "🚀 Learning Curve Dashboard is coming soon in the next release!"))
+
+    def _show_toast(self, message: str, duration_ms: int = 4000):
+        # Safely hide/remove previous toast if it still exists in C++ Qt memory
+        old_toast = getattr(self, "_toast_frame", None)
+        if old_toast is not None:
+            try:
+                old_toast.hide()
+                old_toast.deleteLater()
+            except RuntimeError:
+                pass
+            self._toast_frame = None
+
+        self._toast_frame = QFrame(self)
+        self._toast_frame.setStyleSheet("""
+            QFrame {
+                background-color: #1f242c;
+                border: 1px solid #388bfd;
+                border-radius: 8px;
+            }
+            QLabel {
+                color: #58a6ff;
+                font-size: 13px;
+                font-weight: 600;
+                background-color: transparent;
+            }
+        """)
+        toast_layout = QHBoxLayout(self._toast_frame)
+        toast_layout.setContentsMargins(16, 10, 16, 10)
+        
+        lbl = QLabel(message, self._toast_frame)
+        toast_layout.addWidget(lbl)
+        
+        self._toast_frame.adjustSize()
+        # Position in top-right corner of the window
+        margin_x = 24
+        margin_y = 60
+        pos_x = max(10, self.width() - self._toast_frame.width() - margin_x)
+        self._toast_frame.move(pos_x, margin_y)
+        self._toast_frame.show()
+        self._toast_frame.raise_()
+
+        # Auto-hide timer that safely removes reference
+        def _cleanup():
+            toast = getattr(self, "_toast_frame", None)
+            if toast is not None:
+                try:
+                    toast.hide()
+                    toast.deleteLater()
+                except RuntimeError:
+                    pass
+                self._toast_frame = None
+
+        QTimer.singleShot(duration_ms, _cleanup)
 
     def _open_settings_drawer(self):
         self.settings_drawer.load_settings()
