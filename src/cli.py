@@ -64,7 +64,7 @@ def main():
         sys.exit(0)
 
     elif command == "init":
-        from src.config_creator import create_config
+        from src.utils.config_creator import create_config
         create_config()
         print("✔ Created .socratic.yaml with default settings.")
         sys.exit(0)
