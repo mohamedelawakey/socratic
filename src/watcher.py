@@ -61,6 +61,12 @@ class FileMonitor(threading.Thread):
 
                     # Scenario A: Clean execution with zero errors
                     if res.returncode == 0:
+                        from src.events import EventBus
+                        from src.db.service import MetricsService
+                        active_id = EventBus.get_active_event_id()
+                        if active_id:
+                            MetricsService.record_error_resolved(active_id)
+
                         self.on_solved_callback()
                         self.running = False
                         break
@@ -72,6 +78,12 @@ class FileMonitor(threading.Thread):
                     # Scenario B: Target error is resolved and code progresses past it
                     if self.target_error and self.target_error not in res.stderr:
                         # Ensure it's not a generic failure before the target error
+                        from src.events import EventBus
+                        from src.db.service import MetricsService
+                        active_id = EventBus.get_active_event_id()
+                        if active_id:
+                            MetricsService.record_error_resolved(active_id)
+
                         self.on_solved_callback()
                         self.running = False
                         break

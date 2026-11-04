@@ -1,6 +1,9 @@
 # python cache
 __pycache__/
 
+# socratic db files
+.socratic/
+
 # md files
 Docs/
 full_plan.md

@@ -27,6 +27,12 @@ class SolutionNode:
 
         response = LLMInvoker.invoke_with_retry(prompt)
 
+        # Mark error event as resolved in database
+        event_id = state.get("event_id")
+        if event_id:
+            from src.db.service import MetricsService
+            MetricsService.record_error_resolved(event_id)
+
         EventBus.emit_solution(response.content)
 
         history = list(state.get("dialogue_history", []))

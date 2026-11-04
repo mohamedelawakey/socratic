@@ -9,7 +9,16 @@ class EventBus:
     _on_solution: Optional[Callable[[str], None]] = None
     _on_crash: Optional[Callable[[Dict[str, Any], Any, Any, Any], None]] = None
     _on_llm_error: Optional[Callable[[str], None]] = None
+    _active_event_id: Optional[str] = None
     _is_session_cancelled: bool = False
+
+    @classmethod
+    def set_active_event_id(cls, event_id: str):
+        cls._active_event_id = event_id
+
+    @classmethod
+    def get_active_event_id(cls) -> Optional[str]:
+        return cls._active_event_id
 
     @classmethod
     def emit_session_cancelled(cls):
