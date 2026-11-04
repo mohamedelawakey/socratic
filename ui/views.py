@@ -47,6 +47,11 @@ class SocraticUI:
                 )
                 agent_thread.start()
 
+                # Launch .socratic.yaml real-time config watcher
+                from src.utils.config_watcher import ConfigFileWatcher
+                config_watcher = ConfigFileWatcher()
+                config_watcher.start()
+
                 # Launch real-time file monitor if target file exists
                 if os.path.exists(context["file_path"]):
                     from src.watcher import FileMonitor
