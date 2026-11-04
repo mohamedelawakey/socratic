@@ -11,6 +11,9 @@ class SocraticAgentState(TypedDict):
     error_type: str
     error_name: str
 
+    # Metrics Event Tracking ID (UUID in database)
+    event_id: Optional[str]
+
     # root cause of the problem
     root_cause: str
 
