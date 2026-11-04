@@ -1,6 +1,6 @@
 from src.agent.prompts.diagnose_prompt import DiagnosePrompt
 from src.agent.state.state import SocraticAgentState
-from src.agent.llm.factory import LLMFactory
+from src.agent.llm.invoker import LLMInvoker
 
 
 class DiagnoseNode:
@@ -16,6 +16,6 @@ class DiagnoseNode:
             function_name=state.get("function_name") or "",
         )
 
-        response = LLMFactory.get_llm().invoke(prompt)
+        response = LLMInvoker.invoke_with_retry(prompt)
 
         return {"root_cause": response.content}
