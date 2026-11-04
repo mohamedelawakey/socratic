@@ -1,11 +1,11 @@
 try:
-    from src.config_template import ConfigTemplate
+    from src.utils.config_template import ConfigTemplate
 except ImportError:
     from config_template import ConfigTemplate
 from pathlib import Path
 import yaml
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # make the socratic.config file
 def create_config():
