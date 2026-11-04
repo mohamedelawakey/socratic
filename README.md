@@ -17,11 +17,11 @@
 ---
 
 <p align="center">
-  <a href="test/test_hook.py">
-    <img src="assets/socratic_ui_demo.png" alt="Socratic Debug Interactive Desktop UI" width="900" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
+  <a href="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/socratic_ui_demo.png">
+    <img src="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/socratic_ui_demo.png" alt="Socratic Debug Interactive Desktop UI" width="900" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
   </a>
   <br />
-  <sub>⚡ <em>Interactive debugging session generated live from <a href="test/test_hook.py"><code>test/test_hook.py</code></a></em></sub>
+  <sub>⚡ <em>Interactive debugging session generated live from <a href="https://github.com/mohamedelawakey/socratic/blob/main/test/test_hook.py"><code>test/test_hook.py</code></a></em></sub>
 </p>
 
 ---
