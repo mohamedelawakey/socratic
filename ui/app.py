@@ -1,3 +1,4 @@
+import html
 import sys
 import threading
 
@@ -238,11 +239,12 @@ class SocraticWindow(QMainWindow):
             return
         self._llm_warned = True
 
+        escaped_err = html.escape(err_msg[:120])
         warn_html = (
             f"<div style='background-color: #272115; border: 1px solid #d29922; "
             f"border-radius: 8px; padding: 12px; margin: 8px 0; color: #e3b341; font-size: 13px;'>"
             f"<b>{self.translations['llm_config_needed']}</b><br/>"
-            f"<span style='color: #8b949e; font-size: 11px;'>Details: {err_msg[:120]}...</span>"
+            f"<span style='color: #8b949e; font-size: 11px;'>Details: {escaped_err}...</span>"
             f"</div>"
         )
         self.chat_area.append(warn_html)
@@ -277,6 +279,13 @@ class SocraticWindow(QMainWindow):
 
         # Release background worker thread if waiting for user input
         submit_gui_user_input("q")
+
+    def closeEvent(self, event):
+        """Signals session cancellation to background workers when window closes."""
+        from src.events import EventBus
+        EventBus.emit_session_cancelled()
+        submit_gui_user_input("q")
+        event.accept()
 
     def _on_live_error_detected(self, error_trace: str):
         retry_html = (
