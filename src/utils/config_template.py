@@ -14,6 +14,10 @@ api_key: "your_api_key"
 socratic_language: "English"
 socratic_style: "friendly"
 
+# Metrics & Database (defaults to "sqlite", or "postgresql", "mysql", "mssql", "oracle")
+database_type: "sqlite"
+database_url: ""
+
 # Observability
 LANGSMITH_TRACING: "true"
 LANGSMITH_API_KEY: "your_langsmith_api_key"
