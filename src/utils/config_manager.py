@@ -1,3 +1,6 @@
+import os
+import stat
+import tempfile
 from pathlib import Path
 import yaml
 from src.utils.read_yaml import ReadYaml
@@ -23,9 +26,20 @@ class ConfigManager:
 
             data.update(new_values)
 
-            with open(config_path, "w", encoding="utf-8") as f:
-                yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            # Atomic Write via tempfile in the same directory
+            dir_path = config_path.parent
+            with tempfile.NamedTemporaryFile("w", dir=dir_path, delete=False, encoding="utf-8") as tf:
+                yaml.dump(data, tf, default_flow_style=False, allow_unicode=True, sort_keys=False)
+                temp_name = tf.name
 
+            # Restrict permissions to owner-only (0o600 / rw-------)
+            try:
+                os.chmod(temp_name, stat.S_IRUSR | stat.S_IWUSR)
+            except OSError:
+                pass
+
+            # Atomic replace
+            os.replace(temp_name, config_path)
             return True
         except Exception:
             return False
