@@ -23,14 +23,13 @@ from src.utils.config_manager import ConfigManager
 class SecretInputField(QWidget):
     """
     A specialized input field for secret keys (like api_key, LANGSMITH_API_KEY).
-    Masks the secret by default while showing a preview prefix (e.g. 'sk-1234••••••••'),
-    and provides an Eye icon button to toggle full visibility and editing.
+    Uses QLineEdit.EchoMode.Password to completely mask secrets by default,
+    with an Eye icon button to toggle full visibility and secure editing.
     """
 
-    def __init__(self, raw_value: str = "", placeholder: str = "", parent=None):
+    def __init__(self, raw_value: str = "", placeholder: str = "", tooltip: str = "", parent=None):
         super().__init__(parent)
         self.raw_value = raw_value or ""
-        self.is_masked = True
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -39,11 +38,14 @@ class SecretInputField(QWidget):
         self.line_edit = QLineEdit(self)
         self.line_edit.setProperty("class", "settingsInput")
         self.line_edit.setPlaceholderText(placeholder)
+        if hasattr(QLineEdit, "EchoMode"):
+            self.line_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.line_edit.setText(self.raw_value)
         self.line_edit.textEdited.connect(self._on_user_edit)
 
         self.eye_btn = QPushButton("👁️", self)
         self.eye_btn.setObjectName("eyeButton")
-        self.eye_btn.setToolTip("Show / Hide Secret")
+        self.eye_btn.setToolTip(tooltip or "Show / Hide Secret")
         if Qt is not None:
             self.eye_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.eye_btn.clicked.connect(self.toggle_mask)
@@ -51,40 +53,25 @@ class SecretInputField(QWidget):
         layout.addWidget(self.line_edit, stretch=1)
         layout.addWidget(self.eye_btn)
 
-        self._render_text()
-
-    def _render_text(self):
-        if not self.raw_value:
-            self.line_edit.setText("")
-            return
-
-        if self.is_masked:
-            prefix_len = min(7, len(self.raw_value))
-            prefix = self.raw_value[:prefix_len]
-            masked_part = "•" * max(6, len(self.raw_value) - prefix_len)
-            self.line_edit.setText(f"{prefix}{masked_part}")
-        else:
-            self.line_edit.setText(self.raw_value)
-
     def _on_user_edit(self, new_text: str):
-        # When user edits directly, update raw_value
         self.raw_value = new_text
 
     def toggle_mask(self):
-        self.is_masked = not self.is_masked
-        if not self.is_masked:
+        if not hasattr(QLineEdit, "EchoMode"):
+            return
+        if self.line_edit.echoMode() == QLineEdit.EchoMode.Password:
+            self.line_edit.setEchoMode(QLineEdit.EchoMode.Normal)
             self.eye_btn.setText("🔒")
-            self.line_edit.setText(self.raw_value)
         else:
+            self.line_edit.setEchoMode(QLineEdit.EchoMode.Password)
             self.eye_btn.setText("👁️")
-            self._render_text()
 
     def get_value(self) -> str:
-        return self.raw_value
+        return self.line_edit.text().strip()
 
     def set_value(self, value: str):
         self.raw_value = value or ""
-        self._render_text()
+        self.line_edit.setText(self.raw_value)
 
 
 class SettingsDrawer(QFrame):
@@ -138,12 +125,12 @@ class SettingsDrawer(QFrame):
         form_layout.setContentsMargins(0, 6, 0, 6)
         form_layout.setSpacing(8)
 
-        # 1. Provider
+        # 1. Provider (Restricted strictly to supported providers)
         form_layout.addWidget(self._make_label(self.translations.get("provider_label", "Provider:")))
         self.provider_combo = QComboBox(form_widget)
         self.provider_combo.setProperty("class", "settingsCombo")
-        self.provider_combo.addItems(["ollama", "openrouter", "google", "openai"])
-        self.provider_combo.setEditable(True)
+        self.provider_combo.addItems(["ollama", "openrouter"])
+        self.provider_combo.setEditable(False)
         form_layout.addWidget(self.provider_combo)
 
         # 2. Provider Model Name
@@ -158,9 +145,14 @@ class SettingsDrawer(QFrame):
         self.provider_link_edit.setProperty("class", "settingsInput")
         form_layout.addWidget(self.provider_link_edit)
 
-        # 4. API Key (Secret with eye toggle)
+        # 4. API Key (Fully masked secret with eye toggle and localized tooltip)
         form_layout.addWidget(self._make_label(self.translations.get("api_key_label", "API Key:")))
-        self.api_key_field = SecretInputField("", "Enter API key...", form_widget)
+        self.api_key_field = SecretInputField(
+            "",
+            self.translations.get("api_key_placeholder", "Enter API key..."),
+            self.translations.get("secret_tooltip", "Show / Hide Secret"),
+            form_widget
+        )
         form_layout.addWidget(self.api_key_field)
 
         # 5. Language
@@ -190,9 +182,14 @@ class SettingsDrawer(QFrame):
         self.tracing_combo.addItems(["true", "false"])
         form_layout.addWidget(self.tracing_combo)
 
-        # 8. LangSmith API Key (Secret with eye toggle)
+        # 8. LangSmith API Key (Fully masked secret with eye toggle and localized tooltip)
         form_layout.addWidget(self._make_label(self.translations.get("langsmith_key_label", "LangSmith API Key:")))
-        self.langsmith_key_field = SecretInputField("", "lsv2_pt_...", form_widget)
+        self.langsmith_key_field = SecretInputField(
+            "",
+            self.translations.get("langsmith_key_placeholder", "lsv2_pt_..."),
+            self.translations.get("secret_tooltip", "Show / Hide Secret"),
+            form_widget
+        )
         form_layout.addWidget(self.langsmith_key_field)
 
         # 9. LangSmith Project
@@ -228,31 +225,25 @@ class SettingsDrawer(QFrame):
     def load_settings(self):
         cfg = ConfigManager.load_config()
 
-        # Provider
-        prov = str(cfg.get("provider", "ollama"))
+        prov = str(cfg.get("provider", "ollama")).lower()
         idx = self.provider_combo.findText(prov, Qt.MatchFlag.MatchFixedString)
         if idx >= 0:
             self.provider_combo.setCurrentIndex(idx)
-        else:
-            self.provider_combo.setEditText(prov)
 
         self.provider_name_edit.setText(str(cfg.get("provider_name", "")))
         self.provider_link_edit.setText(str(cfg.get("provider_link", "")))
         self.api_key_field.set_value(str(cfg.get("api_key", "")))
 
-        # Language
         lang = str(cfg.get("socratic_language", "English"))
         idx = self.language_combo.findText(lang, Qt.MatchFlag.MatchFixedString)
         if idx >= 0:
             self.language_combo.setCurrentIndex(idx)
 
-        # Style
         style = str(cfg.get("socratic_style", "friendly"))
         idx = self.style_combo.findText(style, Qt.MatchFlag.MatchFixedString)
         if idx >= 0:
             self.style_combo.setCurrentIndex(idx)
 
-        # LangSmith
         tracing = str(cfg.get("LANGSMITH_TRACING", "true")).lower()
         idx = self.tracing_combo.findText(tracing, Qt.MatchFlag.MatchFixedString)
         if idx >= 0:
@@ -266,11 +257,11 @@ class SettingsDrawer(QFrame):
             "provider": self.provider_combo.currentText().strip(),
             "provider_name": self.provider_name_edit.text().strip(),
             "provider_link": self.provider_link_edit.text().strip(),
-            "api_key": self.api_key_field.get_value().strip(),
+            "api_key": self.api_key_field.get_value(),
             "socratic_language": self.language_combo.currentText().strip(),
             "socratic_style": self.style_combo.currentText().strip(),
             "LANGSMITH_TRACING": self.tracing_combo.currentText().strip(),
-            "LANGSMITH_API_KEY": self.langsmith_key_field.get_value().strip(),
+            "LANGSMITH_API_KEY": self.langsmith_key_field.get_value(),
             "LANGSMITH_PROJECT": self.langsmith_project_edit.text().strip(),
         }
 
@@ -284,4 +275,3 @@ class SettingsDrawer(QFrame):
             self.save_feedback_label.setText(self.translations.get("settings_save_error", "❌ Error saving"))
             self.save_feedback_label.setStyleSheet("color: #ff7b72; font-size: 13px; font-weight: bold;")
             self.save_feedback_label.show()
-
