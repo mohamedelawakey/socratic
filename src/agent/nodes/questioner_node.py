@@ -36,6 +36,12 @@ class QuestionerNode:
 
         response = LLMInvoker.invoke_with_retry(prompt)
 
+        # Update hint level metric in database
+        event_id = state.get("event_id")
+        if event_id:
+            from src.db.service import MetricsService
+            MetricsService.update_hint_level(event_id, current_hint)
+
         EventBus.emit_mentor_message(
             content=response.content,
             hint_level=current_hint,
