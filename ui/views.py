@@ -118,3 +118,10 @@ class SocraticUI:
             md = Markdown(solution_content)
             panel = Panel(md, title="🏆 Socratic Wrap-Up", border_style="green")
             console.print(panel)
+
+    @staticmethod
+    def display_llm_error(error_msg: str):
+        if SocraticUI.is_gui_active():
+            bridge.llm_error_occurred.emit(error_msg)
+        else:
+            console.print(f"[bold red]⚠️ LLM Error:[/bold red] {error_msg}")
