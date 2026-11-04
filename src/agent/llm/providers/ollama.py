@@ -7,7 +7,7 @@ class OllamaLLM:
     def ollama_llm():
         config = ReadYaml.read_yaml()
 
-        return ChatOllama (
+        return ChatOllama(
             model=config["provider_name"],
             base_url=config["provider_link"],
         )

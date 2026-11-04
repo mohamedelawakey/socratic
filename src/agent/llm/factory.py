@@ -1,4 +1,5 @@
-from src.agent.llm.providers import *
+from src.agent.llm.providers.openrouter import OpenRouterLLM
+from src.agent.llm.providers.ollama import OllamaLLM
 from src.utils.read_yaml import ReadYaml
 
 
