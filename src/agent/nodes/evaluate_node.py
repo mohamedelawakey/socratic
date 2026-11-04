@@ -1,6 +1,6 @@
 from src.agent.prompts.evaluation_prompt import EvaluationPrompt
 from src.agent.state.state import SocraticAgentState
-from src.agent.llm.factory import LLMFactory
+from src.agent.llm.invoker import LLMInvoker
 from src.events import EventBus
 
 
@@ -26,7 +26,7 @@ class EvaluationNode:
             user_input=user_input,
         )
 
-        response = LLMFactory.get_llm().invoke(prompt)
+        response = LLMInvoker.invoke_with_retry(prompt)
         verdict = response.content.strip().upper()
 
         if "SOLVED" in verdict and "UNSOLVED" not in verdict and "NOT SOLVED" not in verdict:

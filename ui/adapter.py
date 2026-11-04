@@ -13,6 +13,7 @@ def register_ui_adapter():
         on_user_input_requested=SocraticUI.prompt_user_input,
         on_evaluator_verdict=SocraticUI.display_evaluator_verdict,
         on_solution=SocraticUI.display_solution,
+        on_llm_error=SocraticUI.display_llm_error,
         on_crash=lambda ctx, etype, evalue, tb: SocraticUI.launch(
             context=ctx,
             exception_type=etype,

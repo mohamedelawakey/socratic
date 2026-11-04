@@ -47,6 +47,11 @@ class SocraticUI:
                 )
                 agent_thread.start()
 
+                # Launch .socratic.yaml real-time config watcher
+                from src.utils.config_watcher import ConfigFileWatcher
+                config_watcher = ConfigFileWatcher()
+                config_watcher.start()
+
                 # Launch real-time file monitor if target file exists
                 if os.path.exists(context["file_path"]):
                     from src.watcher import FileMonitor
@@ -113,3 +118,10 @@ class SocraticUI:
             md = Markdown(solution_content)
             panel = Panel(md, title="🏆 Socratic Wrap-Up", border_style="green")
             console.print(panel)
+
+    @staticmethod
+    def display_llm_error(error_msg: str):
+        if SocraticUI.is_gui_active():
+            bridge.llm_error_occurred.emit(error_msg)
+        else:
+            console.print(f"[bold red]⚠️ LLM Error:[/bold red] {error_msg}")

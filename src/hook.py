@@ -1,6 +1,6 @@
 import sys
 from src.extractor import extract_crash_context
-from src.config_creator import create_config
+from src.utils.config_creator import create_config
 from src.events import EventBus
 
 
