@@ -43,12 +43,12 @@ socratic/
 ### 🔒 Architectural Boundaries & Strict Layer Isolation:
 
 - **Absolute Frontend / Backend Decoupling:**
-  - **Backend / Core (`src/`):** Contains pure business logic, LangGraph state machine, LLM calls, AST parsing, and file watching. It must remain 100% headless and completely unaware of any graphical widgets or CLI libraries.
+  - **Backend / Core (`src/`):** Contains pure business logic, LangGraph state machine, LLM calls, AST parsing, and file watching. Core packages (`src/agent/`, `src/utils/`) must remain 100% headless and completely unaware of any graphical widgets or terminal rendering libraries (with `src/cli.py` being the sole command-line dispatching entrypoint).
   - **Frontend / UI (`ui/`):** Contains presentation widgets, PyQt6 windows, CSS/QSS styles, and Rich terminal views.
   - **Forbidden Direct Coupling:** The Backend must **NEVER** import or directly invoke the Frontend (`src/` ➔ `ui/` is strictly forbidden). Likewise, UI components must **NEVER** tightly couple to or directly orchestrate backend nodes.
   - **The Bridge Contract:** All cross-boundary communication is strictly event-driven through an asynchronous decoupled bridge:
     - **Backend ➔ Frontend:** Managed via `src/events.py` (`EventBus`) and `ui/app.py` (`UIBridge` Qt signals). The backend simply emits an event; whoever is listening (PyQt6 window, CLI, or future web/IDE extension) renders it.
-    - **Frontend ➔ Backend:** User actions (such as submitting answers or saving settings) pass through thread-safe events (`threading.Event`) and decoupled managers (`ConfigManager`), keeping both threads isolated.
+    - **Frontend ➔ Backend:** Runtime interaction events (such as user answers or cancel signals) pass through thread-safe events (`threading.Event` / `EventBus.emit_session_cancelled()`). Settings persistence from the GUI is handled via the dedicated file manager (`ConfigManager`), which safely writes to `.socratic.yaml` on disk and notifies the backend without direct coupling to agent nodes.
 
 - **Dynamic Configuration:** Do not hardcode configurations. Always read via `src.utils.read_yaml.ReadYaml` or persist via `src.utils.config_manager.ConfigManager`.
 - **Stateless Agent Nodes:** All graph nodes inside `src/agent/nodes/` must be pure functions accepting `SocraticAgentState` and returning a partial state dictionary.
@@ -96,18 +96,36 @@ socratic/
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Testing, CI & Verification
 
-Before committing changes:
-1. Verify imports with clean syntax checks:
+Before committing changes, always run the full verification pipeline locally to ensure that GitHub Actions CI will pass with zero failures:
+
+1. **Bytecode Compilation & Clean Syntax Check:**
    ```bash
-   ./venv/bin/python -c "from ui.app import SocraticWindow; from src.hook import install; print('OK')"
+   ./venv/bin/python -m compileall src ui test
    ```
-2. Verify offscreen GUI rendering:
+
+2. **Flake8 Linting (CI Critical Errors):**
+   ```bash
+   ./venv/bin/flake8 src ui --count --select=E9,F63,F7,F82 --show-source --statistics
+   ```
+
+3. **CI Smoke & Import Validation:**
+   ```bash
+   QT_QPA_PLATFORM=offscreen ./venv/bin/python -c "import socratic; import src.extractor; import src.utils.config_creator; import src.utils.config_manager; import ui.translations; print('✅ Core modules imported successfully!')"
+   ```
+
+4. **Offscreen GUI Rendering & Widget Integrity:**
    ```bash
    QT_QPA_PLATFORM=offscreen ./venv/bin/python -c "from PyQt6.QtWidgets import QApplication; from ui.app import SocraticWindow; app = QApplication([]); win = SocraticWindow('TypeError', 'err', 't.py', 1, 'x+y'); win.show(); print('GUI OK')"
    ```
-3. Test end-to-end exception interception:
+
+5. **End-to-End Exception Interception Test:**
    ```bash
    ./venv/bin/python test/test_hook.py
+   ```
+
+6. **Full Local CI Pre-flight (All-in-One Command):**
+   ```bash
+   ./venv/bin/python -m compileall src ui test && ./venv/bin/flake8 src ui --count --select=E9,F63,F7,F82 --show-source --statistics && QT_QPA_PLATFORM=offscreen ./venv/bin/python -c "import socratic; import src.extractor; import src.utils.config_creator; import src.utils.config_manager; import ui.translations; print('✅ All CI tests pass!')"
    ```
