@@ -1,4 +1,4 @@
-from src.config_creator import create_config
+from src.utils.config_creator import create_config
 from pathlib import Path
 import yaml
 import os
