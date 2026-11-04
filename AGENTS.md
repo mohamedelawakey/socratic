@@ -8,7 +8,10 @@ Guidelines, architecture boundaries, and code style principles for AI agents and
 
 1. **Keep It Simple & Pythonic:** Avoid over-engineering, enterprise boilerplate, and unnecessary abstraction layers.
 2. **Pedagogical Integrity:** Socratic never spoon-feeds direct patches or fixes. It guides developers to discover the root cause themselves.
-3. **Purposeful Comments (Only When Needed):** Do not comment on obvious code (e.g., `# set x to 10`). Code should be clear and readable on its own. Use concise comments only when genuinely necessary to explain non-obvious business logic, tricky edge cases, or specific workarounds.
+3. **Strict Minimalist Comments (Zero Fluff):**
+   - **DO NOT** comment on obvious or self-explanatory code (e.g., `# set x to 10`, `# import models`, `# create session`).
+   - Clean, expressive Python code documents itself.
+   - Use comments **ONLY** when strictly necessary to explain non-obvious workarounds, tricky edge cases, or complex mathematical/business algorithms. If code can be understood without a comment, leave it without comments.
 
 ---
 
@@ -91,8 +94,30 @@ socratic/
 ## 🌍 Localization & BiDi Support
 
 - `socratic` natively supports **Arabic** and **English**.
-- Any user-facing string must be declared in both languages inside `ui/translations.py`.
+- **Mandatory Translation Dictionary:** Never hardcode user-facing strings, buttons, alerts, placeholders, or tooltips directly in UI components or agent responses.
+- Any user-facing string must be declared in both languages inside `ui/translations.py` (`TRANSLATIONS["arabic"]` and `TRANSLATIONS["english"]`) and consumed dynamically via `self.translations["key_name"]`.
 - Arabic UI layout direction is right-to-left (`Qt.LayoutDirection.RightToLeft`) with proper text shaping via `ui/bidi.py`.
+- Prompts and LLM feedback must dynamically respect the chosen `socratic_language` ("Arabic" or "English") loaded from configuration.
+
+---
+
+## 📦 Dependency & Requirements Management
+
+- **Strict PyPI Version Verification:** Whenever adding or updating a third-party dependency in `requirements.txt`:
+  - **Always query and verify the latest stable release from PyPI first** before declaring it.
+  - Pin versions intentionally and strictly to avoid unexpected breaking upstream changes.
+- **Consistent File Structure & Style:** Adhere strictly to the established styling of `requirements.txt`:
+  - Group packages by logical category under descriptive header comments (e.g., `# yaml`, `# langchain`, `# langgraph`, `# Terminal & GUI Window`, `# DB`).
+  - Separate categories with a single blank line.
+  - Do not pollute `requirements.txt` with transient sub-dependencies unless pinned for critical fixes.
+
+---
+
+## 🧹 Clean Workspace & Git Hygiene (.gitignore)
+
+- **Strict Ignore Rules for Ephemeral Files:** Never commit temporary files, logs, generated caches, local database files, or test outputs to Git.
+- **Immediate `.gitignore` Upkeep:** Whenever introducing new local artifacts, SQLite databases (e.g. `.socratic/`, `*.db`), temporary test outputs, or scratch logs, immediately verify they are covered by `.gitignore`.
+- Keep the Git tree clean and pristine at all times.
 
 ---
 
