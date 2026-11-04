@@ -60,7 +60,7 @@ SOCRATIC_DARK_THEME = """
         padding: 4px 10px;
         border-radius: 4px;
     }
-    QPushButton#settingsButton {
+    QPushButton#settingsButton, QPushButton#dashboardButton {
         background-color: transparent;
         color: #8b949e;
         border: 1px solid #30363d;
@@ -69,7 +69,7 @@ SOCRATIC_DARK_THEME = """
         font-size: 13px;
         font-weight: 500;
     }
-    QPushButton#settingsButton:hover {
+    QPushButton#settingsButton:hover, QPushButton#dashboardButton:hover {
         background-color: #21262d;
         color: #58a6ff;
         border-color: #58a6ff;
