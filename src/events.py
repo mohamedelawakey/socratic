@@ -9,6 +9,8 @@ class EventBus:
     _on_solution: Optional[Callable[[str], None]] = None
     _on_crash: Optional[Callable[[Dict[str, Any], Any, Any, Any], None]] = None
     _on_llm_error: Optional[Callable[[str], None]] = None
+    _on_metrics_requested: Optional[Callable[[], Dict[str, Any]]] = None
+    _on_report_requested: Optional[Callable[[Dict[str, Any], str, Callable[[str], None]], str]] = None
     _active_event_id: Optional[str] = None
     _is_session_cancelled: bool = False
 
@@ -37,6 +39,8 @@ class EventBus:
         on_solution: Optional[Callable[[str], None]] = None,
         on_crash: Optional[Callable[[Dict[str, Any], Any, Any, Any], None]] = None,
         on_llm_error: Optional[Callable[[str], None]] = None,
+        on_metrics_requested: Optional[Callable[[], Dict[str, Any]]] = None,
+        on_report_requested: Optional[Callable[[Dict[str, Any], str, Callable[[str], None]], str]] = None,
     ):
         """Registers presentation callbacks into the Core event bus."""
         if on_mentor_message:
@@ -51,6 +55,10 @@ class EventBus:
             cls._on_crash = on_crash
         if on_llm_error:
             cls._on_llm_error = on_llm_error
+        if on_metrics_requested:
+            cls._on_metrics_requested = on_metrics_requested
+        if on_report_requested:
+            cls._on_report_requested = on_report_requested
 
     @classmethod
     def emit_mentor_message(cls, content: str, hint_level: int = 1):
@@ -94,3 +102,17 @@ class EventBus:
             cls._on_llm_error(err_msg)
         else:
             print(f"⚠️ [LLM Error]: {err_msg}")
+
+    @classmethod
+    def request_dashboard_metrics(cls) -> Dict[str, Any]:
+        if cls._on_metrics_requested:
+            return cls._on_metrics_requested()
+        from src.db.service import MetricsService
+        return MetricsService.get_dashboard_metrics()
+
+    @classmethod
+    def request_analytics_report(cls, metrics: Dict[str, Any], language: str, on_chunk: Callable[[str], None]) -> str:
+        if cls._on_report_requested:
+            return cls._on_report_requested(metrics, language, on_chunk)
+        from src.features.reports.report_service import ReportService
+        return ReportService.stream_analytics_report(metrics, language=language, on_chunk_callback=on_chunk)
