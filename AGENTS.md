@@ -6,7 +6,10 @@ Guidelines, architecture boundaries, and code style principles for AI agents and
 
 ## 🎯 Project Philosophy
 
-1. **Keep It Simple & Pythonic:** Avoid over-engineering, enterprise boilerplate, and unnecessary abstraction layers.
+1. **Simplicity First & High Cognitive Ergonomics:**
+   - Code must be exceptionally simple, natural to read, and immediately understandable to any developer at first glance.
+   - Avoid over-engineering, enterprise boilerplate, redundant wrapper classes, and clever-but-cryptic Python tricks.
+   - The best solution is the one that achieves the goal with maximum runtime efficiency and minimal cognitive overhead.
 2. **Pedagogical Integrity:** Socratic never spoon-feeds direct patches or fixes. It guides developers to discover the root cause themselves.
 3. **Strict Minimalist Comments (Zero Fluff):**
    - **DO NOT** comment on obvious or self-explanatory code (e.g., `# set x to 10`, `# import models`, `# create session`).
@@ -29,6 +32,9 @@ socratic/
 │   │   ├── prompts/ # Localized prompt templates (English / Arabic)
 │   │   ├── state/   # SocraticAgentState TypedDict
 │   │   └── runner.py# Headless agent runner entrypoint
+│   ├── features/    # Modular standalone domain features (independent of agent graph)
+│   │   └── reports/ # Learning metrics diagnostic reporting & LLM advice service
+│   ├── db/          # Database persistence, telemetry schema, detection & migration
 │   ├── utils/       # Configuration IO (.socratic.yaml), parsing, file watching
 │   ├── cli.py       # Global CLI commands (socratic run, socratic init)
 │   ├── events.py    # Abstract EventBus decoupling Core from UI
@@ -37,7 +43,12 @@ socratic/
 │   └── watcher.py   # Live background FileMonitor for real-time fix detection
 └── ui/              # Presentation layer (PyQt6 Desktop GUI with CLI fallback)
     ├── app.py       # Main Qt window & UIBridge signals
-    ├── settings_drawer.py # Collapsible slide-in settings panel
+    ├── features/    # Feature-driven UI domain components
+    │   ├── dashboard/  # Analytics dashboard view, exporters, and dedicated charts
+    │   │   ├── charts/ # Custom Qt chart components (Pie, Activity Bar)
+    │   │   ├── view.py # Dashboard main view widget
+    │   │   └── report_exporter.py # Multi-format report exporter
+    │   └── settings/   # Settings domain components (SettingsDrawer)
     ├── styles.py    # Dark theme QSS stylesheet
     ├── translations.py # Multilingual dictionary (Arabic & English)
     └── views.py     # Unified dispatcher routing between Desktop GUI and Rich CLI
@@ -46,12 +57,16 @@ socratic/
 ### 🔒 Architectural Boundaries & Strict Layer Isolation:
 
 - **Absolute Frontend / Backend Decoupling:**
-  - **Backend / Core (`src/`):** Contains pure business logic, LangGraph state machine, LLM calls, AST parsing, and file watching. Core packages (`src/agent/`, `src/utils/`) must remain 100% headless and completely unaware of any graphical widgets or terminal rendering libraries (with `src/cli.py` being the sole command-line dispatching entrypoint).
+  - **Backend / Core (`src/`):** Contains pure business logic, LangGraph state machine, LLM calls, AST parsing, and file watching. Core packages (`src/agent/`, `src/features/`, `src/db/`, `src/utils/`) must remain 100% headless and completely unaware of any graphical widgets or terminal rendering libraries (with `src/cli.py` being the sole command-line dispatching entrypoint).
   - **Frontend / UI (`ui/`):** Contains presentation widgets, PyQt6 windows, CSS/QSS styles, and Rich terminal views.
-  - **Forbidden Direct Coupling:** The Backend must **NEVER** import or directly invoke the Frontend (`src/` ➔ `ui/` is strictly forbidden). Likewise, UI components must **NEVER** tightly couple to or directly orchestrate backend nodes.
+  - **Forbidden Direct Coupling:** The Backend must **NEVER** import or directly invoke the Frontend (`src/` ➔ `ui/` is strictly forbidden). Likewise, UI components must **NEVER** directly import backend services or feature implementations directly (`ui/` ➔ `src/features/` or `src/db/` is strictly forbidden).
   - **The Bridge Contract:** All cross-boundary communication is strictly event-driven through an asynchronous decoupled bridge:
     - **Backend ➔ Frontend:** Managed via `src/events.py` (`EventBus`) and `ui/app.py` (`UIBridge` Qt signals). The backend simply emits an event; whoever is listening (PyQt6 window, CLI, or future web/IDE extension) renders it.
-    - **Frontend ➔ Backend:** Runtime interaction events (such as user answers or cancel signals) pass through thread-safe events (`threading.Event` / `EventBus.emit_session_cancelled()`). Settings persistence from the GUI is handled via the dedicated file manager (`ConfigManager`), which safely writes to `.socratic.yaml` on disk and notifies the backend without direct coupling to agent nodes.
+    - **Frontend ➔ Backend:** Runtime interaction events, data queries, and AI generation requests pass strictly through the `EventBus` bridge (e.g. `EventBus.request_dashboard_metrics()`, `EventBus.request_analytics_report()`, `EventBus.emit_session_cancelled()`). Presentation components must never import internal business services directly. Settings persistence from the GUI is handled via the dedicated file manager (`ConfigManager`), which safely writes to `.socratic.yaml` on disk and notifies the backend without direct coupling to agent nodes.
+
+- **Modular Features Domain (`src/features/`):**
+  - All non-core agent capabilities (e.g. analytics reports, code intelligence, future exporters) must live under `src/features/<feature_name>/` and never pollute `src/agent/`.
+  - `src/agent/` remains strictly reserved for the pedagogical Socratic debugging loop (LangGraph nodes, graph edges, and prompt templates).
 
 - **Dynamic Configuration:** Do not hardcode configurations. Always read via `src.utils.read_yaml.ReadYaml` or persist via `src.utils.config_manager.ConfigManager`.
 - **Stateless Agent Nodes:** All graph nodes inside `src/agent/nodes/` must be pure functions accepting `SocraticAgentState` and returning a partial state dictionary.
@@ -82,10 +97,14 @@ socratic/
   - Offload long-running tasks, file watching, and LLM calls to background daemon threads to keep the UI interactive at 60 FPS.
   - Debounce disk I/O and watcher triggers to avoid CPU spikes.
 
-- **Maintainability & Readability:**
-  - Write clean, expressive code that reads naturally.
+- **Maintainability, Clarity & Efficiency:**
+  - Write clean, expressive code that reads like well-structured English prose.
+  - Prioritize simplicity and readability over cleverness; if a junior developer cannot grasp the intent in 10 seconds, refactor it to be simpler.
+  - Strive for peak algorithmic efficiency without introducing complex, fragile abstractions.
   - Group functions by clear logical responsibility.
   - Use concise, intentional comments only when explaining tricky edge cases or non-intuitive logic. Avoid commenting on self-explanatory code.
+
+- **Strict File Size Limit (Max 250 Lines):** No single source file should exceed **250 lines of code**. Large monolithic files hurt readability, increase cognitive load, and make debugging harder. When a file approaches or exceeds this limit, decompose it cleanly into focused, modular helper components or dedicated sub-modules (e.g., separating UI layout building, dialog helpers, or specialized service operations).
 
 - **Error Handling:** Never let background threads crash the main application. Catch expected exceptions gracefully and report via the event bus or UI bridge.
 
