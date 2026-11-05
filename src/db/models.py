@@ -25,3 +25,12 @@ class ErrorEvent(Base):
 
     def __repr__(self):
         return f"<ErrorEvent(id='{self.id}', type='{self.error_type}', status='{self.status}')>"
+
+
+class AppSession(Base):
+    __tablename__ = "app_sessions"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_start = Column(DateTime, default=datetime.utcnow, nullable=False)
+    session_end = Column(DateTime, nullable=True)
+    project_name = Column(String(255), nullable=True)
