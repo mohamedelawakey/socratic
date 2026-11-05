@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from src.db.connection import SessionLocal, init_db
-from src.db.models import ErrorEvent
+from src.db.models import ErrorEvent, AppSession
 
 # Ensure tables exist
 init_db()
@@ -72,5 +72,68 @@ class MetricsService:
             if event:
                 event.dialogue_turns += 1
                 session.commit()
+        finally:
+            session.close()
+
+    @staticmethod
+    def record_app_launch(project_name: str = "") -> str:
+        session = SessionLocal()
+        try:
+            app_session = AppSession(
+                session_start=datetime.utcnow(),
+                project_name=project_name or "default",
+            )
+            session.add(app_session)
+            session.commit()
+            session.refresh(app_session)
+            return app_session.id
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_dashboard_metrics() -> dict:
+        session = SessionLocal()
+        try:
+            events = session.query(ErrorEvent).all()
+            sessions = session.query(AppSession).all()
+
+            # Error counts by type
+            error_counts = {}
+            error_dates = {}
+            solved_count = 0
+            total_duration = 0
+            solved_with_duration = 0
+
+            for ev in events:
+                error_counts[ev.error_type] = error_counts.get(ev.error_type, 0) + 1
+                dt_str = ev.started_at.strftime("%Y-%m-%d") if ev.started_at else "unknown"
+                if ev.error_type not in error_dates:
+                    error_dates[ev.error_type] = []
+                error_dates[ev.error_type].append(dt_str)
+
+                if ev.status == "solved":
+                    solved_count += 1
+                    if ev.duration_seconds is not None:
+                        total_duration += ev.duration_seconds
+                        solved_with_duration += 1
+
+            activity_by_day = {}
+            for ev in events:
+                day_str = ev.started_at.strftime("%Y-%m-%d") if ev.started_at else "unknown"
+                activity_by_day[day_str] = activity_by_day.get(day_str, 0) + 1
+
+            avg_duration = (total_duration // solved_with_duration) if solved_with_duration > 0 else 0
+            solve_rate = int((solved_count / len(events)) * 100) if events else 100
+
+            return {
+                "total_errors": len(events),
+                "solved_count": solved_count,
+                "solve_rate": solve_rate,
+                "avg_duration": avg_duration,
+                "error_counts": error_counts,
+                "error_dates": error_dates,
+                "activity_by_day": activity_by_day,
+                "total_launches": len(sessions),
+            }
         finally:
             session.close()

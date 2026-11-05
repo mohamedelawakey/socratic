@@ -16,13 +16,35 @@
 
 ---
 
-<p align="center">
-  <a href="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/socratic_ui_demo.png">
-    <img src="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/socratic_ui_demo.png" alt="Socratic Debug Interactive Desktop UI" width="900" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
-  </a>
-  <br />
-  <sub>⚡ <em>Interactive debugging session generated live from <a href="https://github.com/mohamedelawakey/socratic/blob/main/test/test_hook.py"><code>test/test_hook.py</code></a></em></sub>
-</p>
+<div align="center">
+
+### ⚡ Interactive Socratic Mentorship Session
+<a href="assets/socratic_ui_demo.png">
+  <img src="assets/socratic_ui_demo.png" alt="Socratic Debug Interactive Desktop UI" width="900" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
+</a>
+
+<br /><br />
+
+<table align="center" border="0" style="border: none; border-collapse: collapse;">
+  <tr>
+    <td align="center" width="50%" style="border: none; vertical-align: top;">
+      <h3>📊 AI Learning Curve Dashboard</h3>
+      <a href="assets/dashboard_demo.png">
+        <img src="assets/dashboard_demo.png" alt="Socratic AI Learning Curve Dashboard" width="440" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);" />
+      </a>
+      <p><sub><em>Interactive Error Distribution, Daily Activity Trends & AI Diagnostic Reports</em></sub></p>
+    </td>
+    <td align="center" width="50%" style="border: none; vertical-align: top;">
+      <h3>⚙️ In-App Settings & Masked Secrets</h3>
+      <a href="assets/settings_drawer_demo.png">
+        <img src="assets/settings_drawer_demo.png" alt="Socratic In-App Settings Drawer" width="440" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);" />
+      </a>
+      <p><sub><em>Slide-in drawer with toggleable secret masking (<code>👁️</code>) & zero-reload updates</em></sub></p>
+    </td>
+  </tr>
+</table>
+
+</div>
 
 ---
 
@@ -43,7 +65,10 @@ Instead of dumping walls of red text or spoon-feeding copy-paste solutions, `soc
 ## ✨ Features
 
 - 🖥️ **Standalone Desktop Window:** Launches an isolated, dark-themed GUI terminal window right at the center of your screen. No terminal clutter.
-- ⚙️ **In-App Settings Drawer & Secret Masking:** Configure models and API keys directly from the GUI with a slide-in settings panel, toggleable secret masking (`👁️`), and instant hot-reloading.
+- 📊 **Interactive AI Learning Curve Dashboard:** Built-in analytics dashboard featuring interactive error distribution donut charts, daily activity bar charts, and personalized AI-generated diagnostic progress reports with live streaming.
+- 📥 **Multi-Format Report Exporting:** Export your AI learning curve reports directly into Markdown (`.md`), PDF (`.pdf`), or Microsoft Word (`.docx`) with zero external binary dependencies.
+- 💾 **Telemetry & Zero-Config Local Database:** Automatically records structured telemetry (error types, time-to-solve, hint levels, repetition) into a zero-setup local SQLite database (`~/.socratic/socratic.db`), with auto-detection and migration support for PostgreSQL and SQL Server.
+- ⚙️ **In-App Settings Drawer & Secret Masking:** Configure models, providers, database engines, and API keys directly from the GUI with a slide-in settings panel, toggleable secret masking (`👁️`), and instant hot-reloading.
 - ⚡ **Real-Time Auto-Reload & Live Watcher:** Background file monitor (`FileMonitor`) listens for fixes as you edit your code. It handles editor auto-save with a smart typing debounce, validates syntax, and auto-detects solutions live—no manual re-runs needed!
 - 🌍 **Pure Native BiDi & Arabic Support:** Flawlessly displays English and Arabic with full Right-to-Left (RTL) text shaping and formatting.
 - 🎯 **Calibrated Socratic Mentorship:** 3-tier adaptive hints (Observation ➔ Mechanism ➔ Idiomatic Prevention).
