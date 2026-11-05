@@ -28,13 +28,13 @@ class DashboardView(QWidget):
         self.translations = translations
         self.setObjectName("dashboardView")
         self.raw_report_markdown = ""
+        self.metrics = {}
 
         self.signals = _ReportSignals()
         self.signals.chunk_received.connect(self._append_report_chunk)
         self.signals.report_finished.connect(self._on_report_finished)
 
         self._build_ui()
-        self.refresh_metrics()
 
     def _build_ui(self):
         main_layout = QVBoxLayout(self)
@@ -89,7 +89,7 @@ class DashboardView(QWidget):
         pie_layout = QVBoxLayout(pie_box)
         pie_title = QLabel(self.translations.get("chart_error_distribution", "🍩 Error Distribution"), pie_box)
         pie_title.setObjectName("chartSectionTitle")
-        self.pie_chart = PieChartWidget({}, pie_box)
+        self.pie_chart = PieChartWidget({}, self.translations, pie_box)
         pie_layout.addWidget(pie_title)
         pie_layout.addWidget(self.pie_chart)
         charts_row.addWidget(pie_box, stretch=1)
@@ -99,7 +99,7 @@ class DashboardView(QWidget):
         line_layout = QVBoxLayout(line_box)
         line_title = QLabel(self.translations.get("chart_daily_activity", "📈 Daily Activity"), line_box)
         line_title.setObjectName("chartSectionTitle")
-        self.line_chart = ActivityLineChart({}, line_box)
+        self.line_chart = ActivityLineChart({}, self.translations, line_box)
         line_layout.addWidget(line_title)
         line_layout.addWidget(self.line_chart)
         charts_row.addWidget(line_box, stretch=1)
@@ -136,9 +136,9 @@ class DashboardView(QWidget):
             if self.format_combo.view():
                 self.format_combo.view().setCursor(Qt.CursorShape.PointingHandCursor)
                 self.format_combo.view().viewport().setCursor(Qt.CursorShape.PointingHandCursor)
-        self.format_combo.addItem("📄 Markdown (.md)", "md")
-        self.format_combo.addItem("📕 PDF Document (.pdf)", "pdf")
-        self.format_combo.addItem("📘 Word Document (.docx)", "docx")
+        self.format_combo.addItem(self.translations.get("export_format_md", "Markdown (*.md)"), "md")
+        self.format_combo.addItem(self.translations.get("export_format_pdf", "PDF Document (*.pdf)"), "pdf")
+        self.format_combo.addItem(self.translations.get("export_format_docx", "Word Document (*.docx)"), "docx")
         report_bar.addWidget(self.format_combo)
 
         self.btn_export = QPushButton(self.translations.get("export_btn", "📥 Export"), report_box)
@@ -196,13 +196,16 @@ class DashboardView(QWidget):
         self.report_viewer.setPlaceholderText(self.translations.get("generating_report", "⏳ Analyzing..."))
 
         def worker():
-            lang = "Arabic" if "arab" in self.translations.get("app_title", "").lower() else "English"
-            EventBus.request_analytics_report(
-                self.metrics,
-                lang,
-                lambda chunk: self.signals.chunk_received.emit(chunk),
-            )
-            self.signals.report_finished.emit()
+            from ui.translations import TRANSLATIONS
+            lang = "Arabic" if self.translations is TRANSLATIONS.get("arabic") else "English"
+            try:
+                EventBus.request_analytics_report(
+                    self.metrics,
+                    lang,
+                    lambda chunk: self.signals.chunk_received.emit(chunk),
+                )
+            finally:
+                self.signals.report_finished.emit()
 
         threading.Thread(target=worker, daemon=True).start()
 
