@@ -117,17 +117,10 @@ class MetricsService:
                         total_duration += ev.duration_seconds
                         solved_with_duration += 1
 
-            # Activity per day (past 7-14 days or recorded sessions)
             activity_by_day = {}
-            for s in sessions:
-                day_str = s.session_start.strftime("%Y-%m-%d") if s.session_start else "unknown"
-                activity_by_day[day_str] = activity_by_day.get(day_str, 0) + 1
-
-            # Also include error event dates in activity
             for ev in events:
                 day_str = ev.started_at.strftime("%Y-%m-%d") if ev.started_at else "unknown"
-                if day_str not in activity_by_day:
-                    activity_by_day[day_str] = 1
+                activity_by_day[day_str] = activity_by_day.get(day_str, 0) + 1
 
             avg_duration = (total_duration // solved_with_duration) if solved_with_duration > 0 else 0
             solve_rate = int((solved_count / len(events)) * 100) if events else 100
