@@ -5,7 +5,7 @@ import threading
 try:
     from PyQt6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-        QTextEdit, QLineEdit, QPushButton, QLabel, QFrame
+        QTextEdit, QLineEdit, QPushButton, QLabel, QFrame, QStackedWidget
     )
     from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QPropertyAnimation, QPoint
     from PyQt6.QtGui import QTextCursor
@@ -52,7 +52,7 @@ from src.utils.read_yaml import ReadYaml
 from ui.translations import TRANSLATIONS
 from ui.styles import SOCRATIC_DARK_THEME
 from ui.templates import ChatTemplates
-from ui.settings_drawer import SettingsDrawer
+from ui.features.settings import SettingsDrawer
 
 
 _user_reply_event = threading.Event()
@@ -107,14 +107,17 @@ class SocraticWindow(QMainWindow):
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
 
-        # Root layout holding Left (Chat & Main) and Right (Settings Drawer)
+        # Root layout holding Stacked Views (Chat vs Dashboard) and Right (Settings Drawer)
         root_h_layout = QHBoxLayout(central_widget)
         root_h_layout.setContentsMargins(0, 0, 0, 0)
         root_h_layout.setSpacing(0)
 
-        # Left / Main Container
-        left_container = QWidget(central_widget)
-        main_layout = QVBoxLayout(left_container)
+        # Stacked Widget to cleanly switch between Session Chat and Dashboard
+        self.stacked_views = QStackedWidget(central_widget)
+
+        # Page 1: Session Chat Container
+        chat_container = QWidget(self.stacked_views)
+        main_layout = QVBoxLayout(chat_container)
         main_layout.setContentsMargins(18, 16, 18, 16)
         main_layout.setSpacing(12)
 
@@ -197,7 +200,15 @@ class SocraticWindow(QMainWindow):
         input_layout.addWidget(self.send_button)
         main_layout.addLayout(input_layout)
 
-        root_h_layout.addWidget(left_container, stretch=1)
+        self.stacked_views.addWidget(chat_container)
+
+        # Page 2: Dashboard View
+        from ui.features.dashboard import DashboardView
+        self.dashboard_view = DashboardView(self.translations, self.stacked_views)
+        self.dashboard_view.back_requested.connect(self._on_back_to_session)
+        self.stacked_views.addWidget(self.dashboard_view)
+
+        root_h_layout.addWidget(self.stacked_views, stretch=1)
 
         # Settings Drawer Panel (320px width, hidden initially)
         self.settings_drawer = SettingsDrawer(self.translations, self)
@@ -214,8 +225,11 @@ class SocraticWindow(QMainWindow):
             self._open_settings_drawer()
 
     def _on_dashboard_clicked(self):
-        # Toast Notification popup in the corner that automatically fades out
-        self._show_toast(self.translations.get("dashboard_coming_soon", "🚀 Learning Curve Dashboard is coming soon in the next release!"))
+        self.dashboard_view.refresh_metrics()
+        self.stacked_views.setCurrentIndex(1)
+
+    def _on_back_to_session(self):
+        self.stacked_views.setCurrentIndex(0)
 
     def _show_toast(self, message: str, duration_ms: int = 4000):
         # Safely hide/remove previous toast if it still exists in C++ Qt memory
