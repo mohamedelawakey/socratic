@@ -18,9 +18,10 @@ class PieChartWidget(QWidget):
         QColor("#d29922"),  # Gold
     ]
 
-    def __init__(self, data: dict = None, parent=None):
+    def __init__(self, data: dict = None, translations: dict = None, parent=None):
         super().__init__(parent)
         self.data = data or {}
+        self.translations = translations or {}
         self.setMinimumSize(260, 220)
         self.setMouseTracking(True)
         self.hovered_index = -1
@@ -29,6 +30,10 @@ class PieChartWidget(QWidget):
     def set_data(self, data: dict):
         self.data = data or {}
         self.hovered_index = -1
+        self.update()
+
+    def set_translations(self, translations: dict):
+        self.translations = translations or {}
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -78,7 +83,8 @@ class PieChartWidget(QWidget):
         if not self.data:
             painter.setPen(QColor("#8b949e"))
             painter.setFont(QFont("Segoe UI", 12))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No error data recorded yet")
+            no_data_msg = self.translations.get("chart_no_error_data", "No error data recorded yet")
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, no_data_msg)
             return
 
         total = sum(self.data.values())
@@ -143,4 +149,5 @@ class PieChartWidget(QWidget):
         else:
             painter.setPen(QColor("#ffffff"))
             painter.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-            painter.drawText(hole_rect, Qt.AlignmentFlag.AlignCenter, f"{total}\nErrors")
+            err_title = self.translations.get("chart_errors_label", "Errors")
+            painter.drawText(hole_rect, Qt.AlignmentFlag.AlignCenter, f"{total}\n{err_title}")

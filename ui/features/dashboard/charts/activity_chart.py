@@ -9,9 +9,10 @@ except ImportError:
 class ActivityLineChart(QWidget):
     """Interactive daily activity bar chart displaying error trends per day."""
 
-    def __init__(self, data: dict = None, parent=None):
+    def __init__(self, data: dict = None, translations: dict = None, parent=None):
         super().__init__(parent)
         self.data = data or {}
+        self.translations = translations or {}
         self.setMinimumSize(260, 220)
         self.setMouseTracking(True)
         self.hovered_bar = -1
@@ -22,6 +23,10 @@ class ActivityLineChart(QWidget):
     def set_data(self, data: dict):
         self.data = data or {}
         self.hovered_bar = -1
+        self.update()
+
+    def set_translations(self, translations: dict):
+        self.translations = translations or {}
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -56,7 +61,8 @@ class ActivityLineChart(QWidget):
         if not self.data:
             painter.setPen(QColor("#8b949e"))
             painter.setFont(QFont("Segoe UI", 12))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No activity recorded yet")
+            no_act_msg = self.translations.get("chart_no_activity_data", "No activity recorded yet")
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, no_act_msg)
             return
 
         self.sorted_days = sorted(self.data.keys())
@@ -119,7 +125,8 @@ class ActivityLineChart(QWidget):
 
         # Header summary if hovered
         if self.hovered_bar != -1 and self.hovered_bar < len(self.sorted_days):
-            day_text = f"📅 {self.sorted_days[self.hovered_bar]}: {self.counts[self.hovered_bar]} errors intercepted"
+            inter_label = self.translations.get("chart_errors_intercepted", "errors intercepted")
+            day_text = f"📅 {self.sorted_days[self.hovered_bar]}: {self.counts[self.hovered_bar]} {inter_label}"
             painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             painter.setPen(QColor("#58a6ff"))
             painter.drawText(
