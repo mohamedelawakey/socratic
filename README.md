@@ -19,8 +19,8 @@
 <div align="center">
 
 ### ⚡ Interactive Socratic Mentorship Session
-<a href="assets/socratic_ui_demo.png">
-  <img src="assets/socratic_ui_demo.png" alt="Socratic Debug Interactive Desktop UI" width="900" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
+<a href="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/socratic_ui_demo.png">
+  <img src="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/socratic_ui_demo.png" alt="Socratic Debug Interactive Desktop UI" width="900" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
 </a>
 
 <br /><br />
@@ -29,15 +29,15 @@
   <tr>
     <td align="center" width="50%" style="border: none; vertical-align: top;">
       <h3>📊 AI Learning Curve Dashboard</h3>
-      <a href="assets/dashboard_demo.png">
-        <img src="assets/dashboard_demo.png" alt="Socratic AI Learning Curve Dashboard" width="440" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);" />
+      <a href="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/dashboard_demo.png">
+        <img src="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/dashboard_demo.png" alt="Socratic AI Learning Curve Dashboard" width="440" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);" />
       </a>
       <p><sub><em>Interactive Error Distribution, Daily Activity Trends & AI Diagnostic Reports</em></sub></p>
     </td>
     <td align="center" width="50%" style="border: none; vertical-align: top;">
       <h3>⚙️ In-App Settings & Masked Secrets</h3>
-      <a href="assets/settings_drawer_demo.png">
-        <img src="assets/settings_drawer_demo.png" alt="Socratic In-App Settings Drawer" width="440" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);" />
+      <a href="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/settings_drawer_demo.png">
+        <img src="https://raw.githubusercontent.com/mohamedelawakey/socratic/main/assets/settings_drawer_demo.png" alt="Socratic In-App Settings Drawer" width="440" style="border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);" />
       </a>
       <p><sub><em>Slide-in drawer with toggleable secret masking (<code>👁️</code>) & zero-reload updates</em></sub></p>
     </td>
