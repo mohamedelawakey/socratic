@@ -1,16 +1,16 @@
 import os
 import re
 from PyQt6.QtWidgets import QFileDialog
-from PyQt6.QtGui import QTextDocument
+from PyQt6.QtGui import QTextDocument, QPdfWriter
 from ui.features.dashboard.docx_exporter import DocxExporter
 
 
 class ReportExporter:
     @staticmethod
     def clean_markdown_to_plain(text: str) -> str:
-        t = re.sub(r"#+\s*", "", text)
+        t = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
         t = re.sub(r"\*{1,3}(.*?)\*{1,3}", r"\1", t)
-        t = re.sub(r"_{1,3}(.*?)_{1,3}", r"\1", t)
+        t = re.sub(r"(?<!\w)_{1,3}(.+?)_{1,3}(?!\w)", r"\1", t)
         t = re.sub(r"`(.*?)`", r"\1", t)
         return t.strip()
 
@@ -39,7 +39,7 @@ class ReportExporter:
         if format_ext == "pdf":
             doc = QTextDocument()
             doc.setMarkdown(raw_markdown)
-            doc.printToPdf(file_path)
+            doc.print(QPdfWriter(file_path))
         elif format_ext == "docx":
             DocxExporter.export_text_to_docx(plain_content, file_path)
         else:
